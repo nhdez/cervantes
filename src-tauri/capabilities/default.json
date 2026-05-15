@@ -7,7 +7,7 @@
     "core:default",
     "opener:default",
     "http:default",
-    "shell:default",
+    "shell:allow-open",
     "store:default"
   ]
 }
