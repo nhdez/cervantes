@@ -1,5 +1,5 @@
 import Database from "@tauri-apps/plugin-sql";
-import type { FavMeta } from "../types/hn";
+import type { FavMeta, HNItem } from "../types/hn";
 
 interface FavoriteRow {
   id: number;
@@ -21,15 +21,17 @@ async function db(): Promise<Database> {
   return _db;
 }
 
-export async function dbLoadFavorites(): Promise<{ ids: Set<number>; meta: Record<number, FavMeta> }> {
+export async function dbLoadFavorites(): Promise<{ ids: Set<number>; meta: Record<number, FavMeta>; items: Record<number, HNItem> }> {
   const d = await db();
   const rows = await d.select<FavoriteRow[]>("SELECT * FROM favorites ORDER BY saved_at DESC");
   const ids = new Set(rows.map(r => r.id));
   const meta: Record<number, FavMeta> = {};
+  const items: Record<number, HNItem> = {};
   for (const r of rows) {
     meta[r.id] = { note: r.note, tags: JSON.parse(r.tags) as string[], savedAt: r.saved_at };
+    items[r.id] = { id: r.id, type: "story", title: r.title, url: r.url ?? undefined, by: r.by, score: r.score, descendants: r.descendants, time: r.time };
   }
-  return { ids, meta };
+  return { ids, meta, items };
 }
 
 export async function dbSaveFavorite(

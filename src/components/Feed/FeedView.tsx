@@ -1,6 +1,6 @@
 import { useTheme, SERIF, MONO } from "../../theme";
 import { StoryRow } from "./StoryRow";
-import type { FeedType, FavMeta } from "../../types/hn";
+import type { FeedType, FavMeta, HNItem } from "../../types/hn";
 import { useFeedPage, useTotalPages } from "../../hooks/useStories";
 import { useSettingsStore } from "../../stores/settingsStore";
 
@@ -9,13 +9,52 @@ interface FeedViewProps {
   favorites: Set<number>; onToggleFav: (id: number) => void;
   favoriteMeta: Record<number, FavMeta>; page: number;
   onPageChange: (p: number) => void; search: string;
+  favTag?: string | null;
+  favItems?: Record<number, HNItem>;
 }
 
-export function FeedView({ feed, selectedId, onSelect, favorites, onToggleFav, favoriteMeta, page, onPageChange, search }: FeedViewProps) {
+export function FeedView({ feed, selectedId, onSelect, favorites, onToggleFav, favoriteMeta, page, onPageChange, search, favTag, favItems }: FeedViewProps) {
   const t = useTheme();
   const { itemsPerPage } = useSettingsStore();
   const { data: stories, isPending: isLoading, isError } = useFeedPage(feed, page, itemsPerPage);
   const totalPages = useTotalPages(feed, itemsPerPage);
+
+  // Favorites mode — render from local DB data, no HN API
+  if (favTag != null && favItems) {
+    const q = search.toLowerCase();
+    const items = Object.values(favItems)
+      .filter(item => {
+        if (favTag !== "all") {
+          const meta = favoriteMeta[item.id];
+          if (!meta?.tags.includes(favTag)) return false;
+        }
+        if (!search) return true;
+        return (item.title ?? "").toLowerCase().includes(q) || (item.by ?? "").toLowerCase().includes(q);
+      })
+      .sort((a, b) => {
+        const ma = favoriteMeta[a.id]?.savedAt ?? "";
+        const mb = favoriteMeta[b.id]?.savedAt ?? "";
+        return mb.localeCompare(ma);
+      });
+
+    return (
+      <div style={{ width: 420, flexShrink: 0, height: "100%", borderRight: `1px solid ${t.rule}`, background: t.bg, display: "flex", flexDirection: "column" }}>
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {items.length === 0 && (
+            <div style={{ padding: "60px 24px", color: t.muted, fontFamily: SERIF, fontSize: 14, fontStyle: "italic", textAlign: "center" }}>
+              {favTag === "all" ? "Nothing saved yet." : `Nothing tagged "${favTag}" yet.`}
+            </div>
+          )}
+          {items.map((s, i) => (
+            <StoryRow key={s.id} story={s} index={i + 1}
+              selected={selectedId === s.id} isFav={true}
+              favMeta={favoriteMeta[s.id]}
+              onClick={() => onSelect(s.id)} onToggleFav={() => onToggleFav(s.id)}/>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   const filtered = (stories ?? []).filter(s => {
     if (s.dead || s.deleted) return false;

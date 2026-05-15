@@ -1,3 +1,4 @@
+import { useRef, useEffect } from "react";
 import { useTheme, SERIF, MONO } from "../../theme";
 import { Icon } from "../Shared/Icon";
 import { IconButton } from "../Shared/IconButton";
@@ -12,6 +13,20 @@ interface ToolbarProps {
 export function Toolbar({ title, subtitle, search, onSearch, right }: ToolbarProps) {
   const t = useTheme();
   const { dark, setDark } = useSettingsStore();
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        inputRef.current?.focus();
+        inputRef.current?.select();
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
   return (
     <div style={{ height: 56, flexShrink: 0, padding: "0 18px", borderBottom: `1px solid ${t.rule}`, background: t.surface, display: "flex", alignItems: "center", gap: 14 }}>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -20,7 +35,7 @@ export function Toolbar({ title, subtitle, search, onSearch, right }: ToolbarPro
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 6, height: 30, padding: "0 10px", background: t.bg, border: `1px solid ${t.rule}`, borderRadius: 6, width: 220 }}>
         <Icon name="search" color={t.muted} size={13}/>
-        <input value={search} onChange={e => onSearch(e.target.value)} placeholder="Search stories"
+        <input ref={inputRef} value={search} onChange={e => onSearch(e.target.value)} placeholder="Search stories"
           style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: SERIF, fontSize: 13, color: t.ink }}/>
         <span style={{ fontFamily: MONO, fontSize: 9.5, color: t.mutedSoft, border: `1px solid ${t.rule}`, padding: "1px 4px", borderRadius: 3 }}>⌘K</span>
       </div>

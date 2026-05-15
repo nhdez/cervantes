@@ -9,6 +9,7 @@ import { Toolbar } from "./components/Layout/Toolbar";
 import { FeedView } from "./components/Feed/FeedView";
 import { ThreadView } from "./components/Thread/ThreadView";
 import { LoginModal } from "./components/Auth/LoginModal";
+import { SubmitModal } from "./components/Auth/SubmitModal";
 import type { FeedType, HNItem, FavMeta } from "./types/hn";
 import { Icon } from "./components/Shared/Icon";
 import { invoke } from "@tauri-apps/api/core";
@@ -27,18 +28,21 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(0);
   const [showLogin, setShowLogin] = useState(false);
+  const [showSubmit, setShowSubmit] = useState(false);
 
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
   const [favMeta, setFavMeta] = useState<Record<number, FavMeta>>({});
+  const [favItems, setFavItems] = useState<Record<number, HNItem>>({});
   const [votes, setVotes] = useState<Record<number, number>>({});
 
   const { loggedIn, username, setLoggedIn } = useAuthStore();
 
   // Load persisted favorites from SQLite on startup
   useEffect(() => {
-    dbLoadFavorites().then(({ ids, meta }) => {
+    dbLoadFavorites().then(({ ids, meta, items }) => {
       setFavorites(ids);
       setFavMeta(meta);
+      setFavItems(items);
     }).catch(() => {});
   }, []);
 
@@ -74,6 +78,11 @@ export default function App() {
           }
           return next;
         });
+        setFavItems(prev => {
+          const next = { ...prev };
+          for (const { id, item } of toAdd) next[id] = item;
+          return next;
+        });
         for (const { id, item } of toAdd) {
           await dbSaveFavorite(id, item).catch(() => {});
         }
@@ -90,12 +99,17 @@ export default function App() {
     });
     if (wasFav) {
       dbRemoveFavorite(id).catch(() => {});
+      setFavItems(prev => { const c = { ...prev }; delete c[id]; return c; });
     } else {
       const cached = queryClient.getQueryData<HNItem>(["item", id]);
       if (cached) {
         dbSaveFavorite(id, cached).catch(() => {});
+        setFavItems(prev => ({ ...prev, [id]: cached }));
       } else {
-        fetchItem(id).then(item => dbSaveFavorite(id, item)).catch(() => {});
+        fetchItem(id).then(item => {
+          dbSaveFavorite(id, item).catch(() => {});
+          setFavItems(prev => ({ ...prev, [id]: item }));
+        }).catch(() => {});
       }
     }
   };
@@ -133,14 +147,15 @@ export default function App() {
         <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, height: "100%" }}>
           <Toolbar title={title} subtitle={subtitle} search={search} onSearch={setSearch}
             right={loggedIn ? (
-              <button style={{ height: 30, minWidth: 30, padding: "0 10px", borderRadius: 6, border: `1px solid ${theme.rule}`, background: "transparent", color: theme.ink, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, fontFamily: SERIF, fontSize: 13 }}>
+              <button onClick={() => setShowSubmit(true)} style={{ height: 30, minWidth: 30, padding: "0 10px", borderRadius: 6, border: `1px solid ${theme.rule}`, background: "transparent", color: theme.ink, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, fontFamily: SERIF, fontSize: 13 }}>
                 <Icon name="plus" color={theme.ink} size={13}/>Submit
               </button>
             ) : undefined}/>
           <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
             <FeedView feed={section} selectedId={selectedId} onSelect={setSelectedId}
               favorites={favorites} onToggleFav={toggleFav}
-              favoriteMeta={favMeta} page={page} onPageChange={setPage} search={search}/>
+              favoriteMeta={favMeta} page={page} onPageChange={setPage} search={search}
+              favTag={favTag} favItems={favItems}/>
             <ThreadView storyId={selectedId}
               isFav={selectedId ? favorites.has(selectedId) : false}
               favMeta={selectedId ? favMeta[selectedId] : undefined}
@@ -151,6 +166,7 @@ export default function App() {
         </div>
       </Desktop>
       {showLogin && <LoginModal onClose={() => setShowLogin(false)}/>}
+      {showSubmit && <SubmitModal onClose={() => setShowSubmit(false)}/>}
     </ThemeContext.Provider>
   );
 }
