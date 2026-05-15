@@ -1,10 +1,8 @@
 import { useTheme, SERIF, MONO } from "../../theme";
 import { StoryRow } from "./StoryRow";
-import type { FeedType } from "../../types/hn";
+import type { FeedType, FavMeta } from "../../types/hn";
 import { useFeedPage, useTotalPages } from "../../hooks/useStories";
 import { useSettingsStore } from "../../stores/settingsStore";
-
-export interface FavMeta { note: string; tags: string[]; savedAt: string; }
 
 interface FeedViewProps {
   feed: FeedType; selectedId: number | null; onSelect: (id: number) => void;
@@ -16,7 +14,7 @@ interface FeedViewProps {
 export function FeedView({ feed, selectedId, onSelect, favorites, onToggleFav, favoriteMeta, page, onPageChange, search }: FeedViewProps) {
   const t = useTheme();
   const { itemsPerPage } = useSettingsStore();
-  const { data: stories, isLoading, isError } = useFeedPage(feed, page, itemsPerPage);
+  const { data: stories, isPending: isLoading, isError } = useFeedPage(feed, page, itemsPerPage);
   const totalPages = useTotalPages(feed, itemsPerPage);
 
   const filtered = (stories ?? []).filter(s => {

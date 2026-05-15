@@ -18,6 +18,8 @@ export interface HNItem {
   descendants?: number;
 }
 
+export interface FavMeta { note: string; tags: string[]; savedAt: string; }
+
 export interface HNUser {
   id: string;
   created: number;

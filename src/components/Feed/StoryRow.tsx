@@ -4,7 +4,7 @@ import { Icon } from "../Shared/Icon";
 import { Tag } from "../Shared/Tag";
 import type { HNItem } from "../../types/hn";
 import { domainFromUrl, timeAgo } from "../../lib/time";
-import type { FavMeta } from "./FeedView";
+import type { FavMeta } from "../../types/hn";
 
 interface StoryRowProps {
   story: HNItem; index: number; selected: boolean;
