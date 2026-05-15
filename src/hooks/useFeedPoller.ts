@@ -48,6 +48,19 @@ export function useFeedPoller(): FeedPollerResult {
         }
       }
       initialisedRef.current = true;
+
+      // DEV: skew the baseline so position deltas are immediately visible
+      if (import.meta.env.DEV) {
+        const shifts = [-6, 4, 0, -2, 8, 0, 3, -5, 1, 0, 7, -3, 0, 2, -4, 0, 5, -1, 0, 3, -7, 0, 4, -2, 0, 6, -3, 1, 0, -5];
+        setBaselineRanks(prev => {
+          const skewed: Record<number, number> = {};
+          let i = 0;
+          for (const [idStr, rank] of Object.entries(prev)) {
+            skewed[Number(idStr)] = Math.max(0, rank + (shifts[i++ % shifts.length]));
+          }
+          return skewed;
+        });
+      }
     };
 
     init();
