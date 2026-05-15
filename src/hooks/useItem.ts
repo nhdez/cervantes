@@ -10,9 +10,9 @@ export function useItem(id: number | null) {
   });
 }
 
-export function useKids(ids: number[] | undefined) {
+export function useKids(parentId: number, ids: number[] | undefined) {
   return useQuery({
-    queryKey: ["kids", ids],
+    queryKey: ["kids", parentId],
     queryFn: () => fetchItems(ids!),
     enabled: !!ids && ids.length > 0,
     staleTime: 5 * 60_000,
