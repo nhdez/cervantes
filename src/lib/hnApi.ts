@@ -30,6 +30,37 @@ interface AlgoliaHit {
   points: number; num_comments: number; created_at_i: number; story_text?: string | null;
 }
 
+export interface AlgoliaStoryResult {
+  id: number; title: string; url?: string; by: string;
+  score: number; descendants: number; time: number;
+}
+
+export interface AlgoliaCommentResult {
+  id: number; by: string; text: string; time: number;
+  storyId: number; storyTitle: string;
+}
+
+export async function searchHNStories(query: string, limit = 20): Promise<AlgoliaStoryResult[]> {
+  const res = await fetch(`${ALGOLIA}/search?query=${encodeURIComponent(query)}&tags=story&hitsPerPage=${limit}`);
+  if (!res.ok) throw new Error(`Algolia search failed: ${res.status}`);
+  const data = await res.json() as { hits: Array<{ objectID: string; title: string; url?: string; author: string; points: number; num_comments: number; created_at_i: number }> };
+  return data.hits.map(h => ({
+    id: parseInt(h.objectID, 10), title: h.title, url: h.url,
+    by: h.author, score: h.points, descendants: h.num_comments, time: h.created_at_i,
+  }));
+}
+
+export async function searchHNComments(query: string, limit = 20): Promise<AlgoliaCommentResult[]> {
+  const res = await fetch(`${ALGOLIA}/search?query=${encodeURIComponent(query)}&tags=comment&hitsPerPage=${limit}`);
+  if (!res.ok) throw new Error(`Algolia search failed: ${res.status}`);
+  const data = await res.json() as { hits: Array<{ objectID: string; author: string; comment_text?: string; created_at_i: number; story_id?: number; story_title?: string }> };
+  return data.hits.map(h => ({
+    id: parseInt(h.objectID, 10), by: h.author,
+    text: h.comment_text ?? "", time: h.created_at_i,
+    storyId: h.story_id ?? 0, storyTitle: h.story_title ?? "",
+  }));
+}
+
 export async function fetchUserStories(username: string, limit = 15): Promise<HNItem[]> {
   const url = `${ALGOLIA}/search_by_date?tags=story,author_${encodeURIComponent(username)}&hitsPerPage=${limit}`;
   const res = await fetch(url);

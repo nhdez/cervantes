@@ -14,6 +14,7 @@ import { ProfileModal } from "./components/Profile/ProfileModal";
 import { ProfileContext } from "./contexts/ProfileContext";
 import { NoteContext } from "./contexts/NoteContext";
 import { NotesView } from "./components/Notes/NotesView";
+import { AlgoliaSearchView } from "./components/Feed/AlgoliaSearchView";
 import { useFeedPoller } from "./hooks/useFeedPoller";
 import type { FeedType, HNItem, FavMeta, NoteRecord } from "./types/hn";
 import { dbLoadFollowing, dbFollowUser, dbUnfollowUser } from "./lib/db";
@@ -217,6 +218,8 @@ export default function App() {
           <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
             {showNotes
               ? <NotesView selectedId={selectedId} onSelect={id => { setSelectedId(id); }} search={search}/>
+              : search.trim().length > 1 && !favTag && !showFollowing
+              ? <AlgoliaSearchView query={search} selectedId={selectedId} onSelect={setSelectedId} favorites={favorites} onToggleFav={toggleFav}/>
               : <FeedView feed={section} selectedId={selectedId} onSelect={setSelectedId}
                   favorites={favorites} onToggleFav={toggleFav}
                   favoriteMeta={favMeta} page={page} onPageChange={setPage} search={search}
