@@ -1,6 +1,6 @@
 use keyring::Entry;
 
-const SERVICE: &str = "com.mecomic.dev";
+const SERVICE: &str = "com.cervantes.app";
 const SESSION_KEY: &str = "hn_session";
 const USERNAME_KEY: &str = "hn_username";
 

@@ -1,4 +1,4 @@
-# CLAUDE.md — Working Instructions for Hyperborea
+# CLAUDE.md — Working Instructions for Cervantes
 
 This file tells you (Claude Code) how to work on this project. Read it before touching anything.
 
@@ -17,8 +17,8 @@ A Tauri 2 desktop app for Hacker News. React + TypeScript frontend, Rust backend
 cargo install tauri-cli --version "^2"
 
 # Scaffold
-npm create tauri-app@latest hyperborea -- --template react-ts
-cd hyperborea
+npm create tauri-app@latest cervantes -- --template react-ts
+cd cervantes
 npm install
 
 # Extra frontend deps
@@ -59,7 +59,7 @@ npm test
 ## Project Structure
 
 ```
-hyperborea/
+cervantes/
 ├── SPEC.md
 ├── CLAUDE.md
 ├── package.json

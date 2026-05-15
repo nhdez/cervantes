@@ -1,4 +1,4 @@
-# Hyperborea — Hacker News Desktop Client
+# Cervantes — Hacker News Desktop Client
 
 > A fast, native Hacker News reader and writer for the desktop, built with Tauri.
 
@@ -6,7 +6,7 @@
 
 ## Overview
 
-Hyperborea is a desktop application for reading and participating in Hacker News. It wraps the official Firebase-based HN API for reading and the HN web interface (via scraping/form submission) for authenticated write actions (comments, upvotes, submissions). The app targets Ubuntu (Linux) as the primary platform but leverages Tauri's cross-platform capabilities so Windows and macOS builds should work without major modification.
+Cervantes is a desktop application for reading and participating in Hacker News. It wraps the official Firebase-based HN API for reading and the HN web interface (via scraping/form submission) for authenticated write actions (comments, upvotes, submissions). The app targets Ubuntu (Linux) as the primary platform but leverages Tauri's cross-platform capabilities so Windows and macOS builds should work without major modification.
 
 ---
 
