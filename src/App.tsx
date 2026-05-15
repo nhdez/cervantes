@@ -48,7 +48,7 @@ export default function App() {
   const [votes, setVotes] = useState<Record<number, number>>({});
 
   const { loggedIn, username, setLoggedIn } = useAuthStore();
-  const { hasUpdates, clearUpdates } = useFeedPoller();
+  const { hasUpdates, clearUpdates, positionDeltas } = useFeedPoller();
 
   // Load persisted favorites and following from SQLite on startup
   useEffect(() => {
@@ -221,7 +221,8 @@ export default function App() {
                   favorites={favorites} onToggleFav={toggleFav}
                   favoriteMeta={favMeta} page={page} onPageChange={setPage} search={search}
                   favTag={favTag} favItems={favItems}
-                  followingMode={showFollowing} following={following}/>
+                  followingMode={showFollowing} following={following}
+                  positionDeltas={positionDeltas}/>
             }
             <ThreadView storyId={selectedId}
               isFav={selectedId ? favorites.has(selectedId) : false}

@@ -14,9 +14,10 @@ interface FeedViewProps {
   favItems?: Record<number, HNItem>;
   followingMode?: boolean;
   following?: Set<string>;
+  positionDeltas?: Record<number, number>;
 }
 
-export function FeedView({ feed, selectedId, onSelect, favorites, onToggleFav, favoriteMeta, page, onPageChange, search, favTag, favItems, followingMode, following }: FeedViewProps) {
+export function FeedView({ feed, selectedId, onSelect, favorites, onToggleFav, favoriteMeta, page, onPageChange, search, favTag, favItems, followingMode, following, positionDeltas }: FeedViewProps) {
   const t = useTheme();
   const { itemsPerPage } = useSettingsStore();
   const { data: stories, isPending: isLoading, isError } = useFeedPage(feed, page, itemsPerPage);
@@ -111,6 +112,7 @@ export function FeedView({ feed, selectedId, onSelect, favorites, onToggleFav, f
           <StoryRow key={s.id} story={s} index={page * itemsPerPage + i + 1}
             selected={selectedId === s.id} isFav={favorites.has(s.id)}
             favMeta={favoriteMeta[s.id]}
+            positionDelta={positionDeltas?.[s.id]}
             onClick={() => onSelect(s.id)} onToggleFav={() => onToggleFav(s.id)}/>
         ))}
       </div>

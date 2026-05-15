@@ -10,10 +10,11 @@ import { useOpenProfile } from "../../contexts/ProfileContext";
 interface StoryRowProps {
   story: HNItem; index: number; selected: boolean;
   isFav: boolean; favMeta?: FavMeta;
+  positionDelta?: number;
   onClick: () => void; onToggleFav: () => void;
 }
 
-export function StoryRow({ story, index, selected, isFav, favMeta, onClick, onToggleFav }: StoryRowProps) {
+export function StoryRow({ story, index, selected, isFav, favMeta, positionDelta, onClick, onToggleFav }: StoryRowProps) {
   const t = useTheme();
   const [hover, setHover] = useState(false);
   const openProfile = useOpenProfile();
@@ -26,8 +27,15 @@ export function StoryRow({ story, index, selected, isFav, favMeta, onClick, onTo
     <div onClick={onClick} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
       style={{ padding: "14px 18px 14px 16px", background: selected ? t.surface : (hover ? t.surfaceAlt : "transparent"), borderBottom: `1px solid ${t.rule}`, cursor: "pointer", position: "relative", borderLeft: selected ? `3px solid ${t.accent}` : "3px solid transparent" }}>
       <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-        <div style={{ fontFamily: MONO, fontSize: 11, color: t.mutedSoft, width: 22, paddingTop: 3, textAlign: "right", flexShrink: 0 }}>
-          {String(index).padStart(2, "0")}
+        <div style={{ width: 22, flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", paddingTop: 3, gap: 2 }}>
+          <span style={{ fontFamily: MONO, fontSize: 11, color: t.mutedSoft }}>
+            {String(index).padStart(2, "0")}
+          </span>
+          {positionDelta !== undefined && positionDelta !== 0 && (
+            <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, lineHeight: 1, color: positionDelta > 0 ? t.good : t.warn, letterSpacing: 0 }}>
+              {positionDelta > 0 ? `▲${positionDelta}` : `▼${Math.abs(positionDelta)}`}
+            </span>
+          )}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: SERIF, fontSize: 15.5, lineHeight: 1.35, color: t.ink, fontWeight: selected ? 600 : 500 }}>
