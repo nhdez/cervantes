@@ -60,3 +60,19 @@ export async function dbUpdateTags(id: number, tags: string[]): Promise<void> {
   const d = await db();
   await d.execute("UPDATE favorites SET tags = ? WHERE id = ?", [JSON.stringify(tags), id]);
 }
+
+export async function dbLoadFollowing(): Promise<Set<string>> {
+  const d = await db();
+  const rows = await d.select<{ username: string }[]>("SELECT username FROM following ORDER BY followed_at DESC");
+  return new Set(rows.map(r => r.username));
+}
+
+export async function dbFollowUser(username: string): Promise<void> {
+  const d = await db();
+  await d.execute("INSERT OR IGNORE INTO following (username) VALUES (?)", [username]);
+}
+
+export async function dbUnfollowUser(username: string): Promise<void> {
+  const d = await db();
+  await d.execute("DELETE FROM following WHERE username = ?", [username]);
+}

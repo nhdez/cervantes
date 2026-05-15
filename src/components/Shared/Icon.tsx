@@ -18,6 +18,9 @@ export function Icon({ name, size = 14, color = "currentColor" }: IconProps) {
     case "reply":     return <svg width={s} height={s} viewBox="0 0 16 16"><path {...stroke} d="M6 4L2 7.5 6 11M2.5 7.5H10a3.5 3.5 0 013.5 3.5V13"/></svg>;
     case "more":      return <svg width={s} height={s} viewBox="0 0 16 16"><circle cx="4" cy="8" r="1" fill={color}/><circle cx="8" cy="8" r="1" fill={color}/><circle cx="12" cy="8" r="1" fill={color}/></svg>;
     case "check":     return <svg width={s} height={s} viewBox="0 0 16 16"><path {...stroke} d="M3 8.5L6.5 12 13 5"/></svg>;
+    case "x":         return <svg width={s} height={s} viewBox="0 0 16 16"><path {...stroke} d="M4 4l8 8M12 4l-8 8"/></svg>;
+    case "users":     return <svg width={s} height={s} viewBox="0 0 16 16"><circle {...stroke} cx="6" cy="5.5" r="2.5"/><path {...stroke} d="M1.5 13c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4"/><path {...stroke} d="M11 4a2.5 2.5 0 010 5M14.5 13c0-2-1.2-3.5-3.5-3.5"/></svg>;
+    case "person":    return <svg width={s} height={s} viewBox="0 0 16 16"><circle {...stroke} cx="8" cy="5.5" r="2.5"/><path {...stroke} d="M3 13.5c0-2.8 2.2-5 5-5s5 2.2 5 5"/></svg>;
     default:          return null;
   }
 }

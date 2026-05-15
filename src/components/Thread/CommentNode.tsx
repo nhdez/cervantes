@@ -6,6 +6,7 @@ import { timeAgo } from "../../lib/time";
 import type { HNItem } from "../../types/hn";
 import { useKids } from "../../hooks/useItem";
 import { useAuthStore } from "../../stores/authStore";
+import { useOpenProfile } from "../../contexts/ProfileContext";
 
 function btnGhost(t: Theme) { return { display: "inline-flex" as const, alignItems: "center" as const, gap: 6, padding: "6px 12px", borderRadius: 6, border: `1px solid ${t.rule}`, background: "transparent", color: t.ink, fontFamily: SERIF, fontSize: 13, fontWeight: 500, cursor: "pointer" }; }
 function btnPrimary(t: Theme) { return { display: "inline-flex" as const, alignItems: "center" as const, gap: 6, padding: "6px 14px", borderRadius: 6, border: `1px solid ${t.accent}`, background: t.accent, color: "#FBF6E9", fontFamily: SERIF, fontSize: 13, fontWeight: 600, cursor: "pointer" }; }
@@ -21,6 +22,7 @@ export function CommentNode({ comment, depth, votes, onVote }: CommentNodeProps)
   const [replying, setReplying] = useState(false);
   const [replyText, setReplyText] = useState("");
   const { loggedIn } = useAuthStore();
+  const openProfile = useOpenProfile();
   const v = votes[comment.id] ?? 0;
   const voted = v > 0;
   const score = (comment.score ?? 0) + v;
@@ -43,7 +45,10 @@ export function CommentNode({ comment, depth, votes, onVote }: CommentNodeProps)
         <div style={{ flex: 1, minWidth: 0 }}>
           {/* Header */}
           <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap", fontFamily: MONO, fontSize: 10.5, color: t.muted, letterSpacing: 0.2 }}>
-            <span style={{ fontFamily: SERIF, fontSize: 13, fontWeight: 600, color: t.ink, letterSpacing: 0 }}>{comment.by}</span>
+            <button onClick={() => comment.by && openProfile(comment.by)}
+              style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, fontFamily: SERIF, fontSize: 13, fontWeight: 600, color: t.ink, letterSpacing: 0 }}>
+              {comment.by}
+            </button>
             {score > 0 && <span>{score} points</span>}
             <span>{timeAgo(comment.time)}</span>
             <button onClick={() => setCollapsed(!collapsed)}

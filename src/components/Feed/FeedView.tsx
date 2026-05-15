@@ -2,6 +2,7 @@ import { useTheme, SERIF, MONO } from "../../theme";
 import { StoryRow } from "./StoryRow";
 import type { FeedType, FavMeta, HNItem } from "../../types/hn";
 import { useFeedPage, useTotalPages } from "../../hooks/useStories";
+import { useFollowingFeed } from "../../hooks/useFollowingFeed";
 import { useSettingsStore } from "../../stores/settingsStore";
 
 interface FeedViewProps {
@@ -11,13 +12,17 @@ interface FeedViewProps {
   onPageChange: (p: number) => void; search: string;
   favTag?: string | null;
   favItems?: Record<number, HNItem>;
+  followingMode?: boolean;
+  following?: Set<string>;
 }
 
-export function FeedView({ feed, selectedId, onSelect, favorites, onToggleFav, favoriteMeta, page, onPageChange, search, favTag, favItems }: FeedViewProps) {
+export function FeedView({ feed, selectedId, onSelect, favorites, onToggleFav, favoriteMeta, page, onPageChange, search, favTag, favItems, followingMode, following }: FeedViewProps) {
   const t = useTheme();
   const { itemsPerPage } = useSettingsStore();
   const { data: stories, isPending: isLoading, isError } = useFeedPage(feed, page, itemsPerPage);
   const totalPages = useTotalPages(feed, itemsPerPage);
+  const followingUsernames = following ? [...following] : [];
+  const { data: followingStories, isPending: followingLoading } = useFollowingFeed(followingUsernames);
 
   // Favorites mode — render from local DB data, no HN API
   if (favTag != null && favItems) {
@@ -48,6 +53,38 @@ export function FeedView({ feed, selectedId, onSelect, favorites, onToggleFav, f
           {items.map((s, i) => (
             <StoryRow key={s.id} story={s} index={i + 1}
               selected={selectedId === s.id} isFav={true}
+              favMeta={favoriteMeta[s.id]}
+              onClick={() => onSelect(s.id)} onToggleFav={() => onToggleFav(s.id)}/>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // Following mode — recent stories from followed users via Algolia
+  if (followingMode) {
+    if (followingLoading) return <FeedShell><span style={{ fontFamily: SERIF, fontSize: 14, fontStyle: "italic", color: t.muted }}>Loading…</span></FeedShell>;
+    const q = search.toLowerCase();
+    const items = (followingStories ?? []).filter(s => {
+      if (!search) return true;
+      return (s.title ?? "").toLowerCase().includes(q) || (s.by ?? "").toLowerCase().includes(q);
+    });
+    return (
+      <div style={{ width: 420, flexShrink: 0, height: "100%", borderRight: `1px solid ${t.rule}`, background: t.bg, display: "flex", flexDirection: "column" }}>
+        <div style={{ flex: 1, overflowY: "auto" }}>
+          {items.length === 0 && following?.size === 0 && (
+            <div style={{ padding: "60px 24px", color: t.muted, fontFamily: SERIF, fontSize: 14, fontStyle: "italic", textAlign: "center" }}>
+              Follow some users to see their posts here.
+            </div>
+          )}
+          {items.length === 0 && (following?.size ?? 0) > 0 && !followingLoading && (
+            <div style={{ padding: "60px 24px", color: t.muted, fontFamily: SERIF, fontSize: 14, fontStyle: "italic", textAlign: "center" }}>
+              No recent stories from followed users.
+            </div>
+          )}
+          {items.map((s, i) => (
+            <StoryRow key={s.id} story={s} index={i + 1}
+              selected={selectedId === s.id} isFav={favorites.has(s.id)}
               favMeta={favoriteMeta[s.id]}
               onClick={() => onSelect(s.id)} onToggleFav={() => onToggleFav(s.id)}/>
           ))}

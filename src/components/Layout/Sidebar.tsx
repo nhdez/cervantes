@@ -26,9 +26,11 @@ interface SidebarProps {
   section: FeedType; onSection: (s: FeedType) => void;
   favTag: string | null; onFavTag: (t: string | null) => void;
   favCount: number; onLoginClick: () => void;
+  showFollowing: boolean; onShowFollowing: () => void;
+  followingCount: number;
 }
 
-export function Sidebar({ section, onSection, favTag, onFavTag, favCount, onLoginClick }: SidebarProps) {
+export function Sidebar({ section, onSection, favTag, onFavTag, favCount, onLoginClick, showFollowing, onShowFollowing, followingCount }: SidebarProps) {
   const t = useTheme();
   const { loggedIn, username, karma } = useAuthStore();
 
@@ -47,7 +49,7 @@ export function Sidebar({ section, onSection, favTag, onFavTag, favCount, onLogi
       <SidebarSectionHeader label="Feeds" />
       <div style={{ padding: "0 8px" }}>
         {SECTIONS.map(s => (
-          <SidebarItem key={s.id} label={s.label} selected={section === s.id && !favTag}
+          <SidebarItem key={s.id} label={s.label} selected={section === s.id && !favTag && !showFollowing}
             onClick={() => { onSection(s.id); onFavTag(null); }}/>
         ))}
       </div>
@@ -57,12 +59,20 @@ export function Sidebar({ section, onSection, favTag, onFavTag, favCount, onLogi
           right={<span style={{ fontFamily: MONO, fontSize: 10, color: t.mutedSoft }}>{favCount}</span>}/>
         <div style={{ padding: "0 8px" }}>
           <SidebarItem label="All saved" iconName="star-fill" iconColor={t.accent}
-            selected={favTag === "all"} onClick={() => onFavTag("all")} count={favCount}/>
+            selected={favTag === "all" && !showFollowing} onClick={() => onFavTag("all")} count={favCount}/>
           {FAVORITE_TAGS.map(tg => (
             <SidebarItem key={tg.id} label={tg.label} iconName="tag"
               iconColor={(t as unknown as Record<string, string>)[tg.color] || t.muted}
-              selected={favTag === tg.id} onClick={() => onFavTag(tg.id)}/>
+              selected={favTag === tg.id && !showFollowing} onClick={() => onFavTag(tg.id)}/>
           ))}
+        </div>
+      </div>
+      {/* Following */}
+      <div style={{ marginTop: 18 }}>
+        <SidebarSectionHeader label="Social"/>
+        <div style={{ padding: "0 8px" }}>
+          <SidebarItem label="Following" iconName="users" iconColor={t.accent}
+            selected={showFollowing} onClick={onShowFollowing} count={followingCount}/>
         </div>
       </div>
       <div style={{ flex: 1 }}/>

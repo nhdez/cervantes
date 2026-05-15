@@ -5,6 +5,7 @@ import { Tag } from "../Shared/Tag";
 import type { HNItem } from "../../types/hn";
 import { domainFromUrl, timeAgo } from "../../lib/time";
 import type { FavMeta } from "../../types/hn";
+import { useOpenProfile } from "../../contexts/ProfileContext";
 
 interface StoryRowProps {
   story: HNItem; index: number; selected: boolean;
@@ -15,6 +16,7 @@ interface StoryRowProps {
 export function StoryRow({ story, index, selected, isFav, favMeta, onClick, onToggleFav }: StoryRowProps) {
   const t = useTheme();
   const [hover, setHover] = useState(false);
+  const openProfile = useOpenProfile();
   const domain = domainFromUrl(story.url);
   const isAsk = story.title?.startsWith("Ask HN");
   const isShow = story.title?.startsWith("Show HN");
@@ -39,7 +41,12 @@ export function StoryRow({ story, index, selected, isFav, favMeta, onClick, onTo
             {(story.score ?? 0) > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="arrow-up" color={t.muted} size={11}/>{story.score}</span>}
             {(story.descendants ?? 0) > 0 && <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}><Icon name="chat" color={t.muted} size={11}/>{story.descendants}</span>}
             <span>{timeAgo(story.time)}</span>
-            {story.by && <span>· {story.by}</span>}
+            {story.by && (
+              <button onClick={e => { e.stopPropagation(); openProfile(story.by!); }}
+                style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, fontFamily: MONO, fontSize: 10.5, color: t.muted, textDecoration: "underline", textUnderlineOffset: 2 }}>
+                {story.by}
+              </button>
+            )}
           </div>
           {isFav && favMeta?.note && (
             <div style={{ marginTop: 8, padding: "6px 10px", borderLeft: `2px solid ${t.accent}`, background: t.surface, fontFamily: SERIF, fontSize: 12.5, fontStyle: "italic", color: t.inkSoft, lineHeight: 1.4 }}>

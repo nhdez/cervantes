@@ -7,6 +7,7 @@ import { domainFromUrl, timeAgo } from "../../lib/time";
 import { FAVORITE_TAGS } from "../Layout/Sidebar";
 import type { HNItem, FavMeta } from "../../types/hn";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { useOpenProfile } from "../../contexts/ProfileContext";
 
 function btnGhost(t: Theme) { return { display: "inline-flex" as const, alignItems: "center" as const, gap: 6, padding: "6px 12px", borderRadius: 6, border: `1px solid ${t.rule}`, background: "transparent", color: t.ink, fontFamily: SERIF, fontSize: 13, fontWeight: 500, cursor: "pointer" }; }
 function btnPrimary(t: Theme) { return { display: "inline-flex" as const, alignItems: "center" as const, gap: 6, padding: "6px 14px", borderRadius: 6, border: `1px solid ${t.accent}`, background: t.accent, color: "#FBF6E9", fontFamily: SERIF, fontSize: 13, fontWeight: 600, cursor: "pointer" }; }
@@ -23,6 +24,7 @@ export function StoryHeader({ story, isFav, favMeta, onToggleFav, onUpdateFavNot
   const t = useTheme();
   const [editingNote, setEditingNote] = useState(false);
   const [draftNote, setDraftNote] = useState(favMeta?.note ?? "");
+  const openProfile = useOpenProfile();
   const domain = domainFromUrl(story.url);
   const v = votes[story.id] ?? 0;
   const voted = v > 0;
@@ -40,7 +42,10 @@ export function StoryHeader({ story, isFav, favMeta, onToggleFav, onUpdateFavNot
         {story.title}
       </h1>
       <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 11, color: t.muted, display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", letterSpacing: 0.2 }}>
-        <span style={{ color: t.inkSoft }}>by {story.by}</span>
+        <button onClick={() => story.by && openProfile(story.by)}
+          style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, fontFamily: MONO, fontSize: 11, color: t.inkSoft, letterSpacing: 0.2 }}>
+          by {story.by}
+        </button>
         <span>{timeAgo(story.time)}</span>
         {domain && (
           <a href="#" onClick={e => { e.preventDefault(); openSource(); }}

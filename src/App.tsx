@@ -4,13 +4,16 @@ import { ThemeContext, THEMES, SERIF } from "./theme";
 import { useSettingsStore } from "./stores/settingsStore";
 import { useAuthStore } from "./stores/authStore";
 import { Desktop } from "./components/Layout/Desktop";
-import { Sidebar, SECTIONS } from "./components/Layout/Sidebar";
+import { Sidebar, SECTIONS, FAVORITE_TAGS } from "./components/Layout/Sidebar";
 import { Toolbar } from "./components/Layout/Toolbar";
 import { FeedView } from "./components/Feed/FeedView";
 import { ThreadView } from "./components/Thread/ThreadView";
 import { LoginModal } from "./components/Auth/LoginModal";
 import { SubmitModal } from "./components/Auth/SubmitModal";
+import { ProfileModal } from "./components/Profile/ProfileModal";
+import { ProfileContext } from "./contexts/ProfileContext";
 import type { FeedType, HNItem, FavMeta } from "./types/hn";
+import { dbLoadFollowing, dbFollowUser, dbUnfollowUser } from "./lib/db";
 import { Icon } from "./components/Shared/Icon";
 import { invoke } from "@tauri-apps/api/core";
 import { fetchUser, fetchItem } from "./lib/hnApi";
@@ -29,6 +32,9 @@ export default function App() {
   const [page, setPage] = useState(0);
   const [showLogin, setShowLogin] = useState(false);
   const [showSubmit, setShowSubmit] = useState(false);
+  const [profileUser, setProfileUser] = useState<string | null>(null);
+  const [following, setFollowing] = useState<Set<string>>(new Set());
+  const [showFollowing, setShowFollowing] = useState(false);
 
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
   const [favMeta, setFavMeta] = useState<Record<number, FavMeta>>({});
@@ -37,13 +43,14 @@ export default function App() {
 
   const { loggedIn, username, setLoggedIn } = useAuthStore();
 
-  // Load persisted favorites from SQLite on startup
+  // Load persisted favorites and following from SQLite on startup
   useEffect(() => {
     dbLoadFavorites().then(({ ids, meta, items }) => {
       setFavorites(ids);
       setFavMeta(meta);
       setFavItems(items);
     }).catch(() => {});
+    dbLoadFollowing().then(f => setFollowing(f)).catch(() => {});
   }, []);
 
   // Restore auth state from keychain on startup
@@ -129,21 +136,35 @@ export default function App() {
     });
   };
 
+  const toggleFollow = (username: string) => {
+    const was = following.has(username);
+    setFollowing(prev => { const n = new Set(prev); was ? n.delete(username) : n.add(username); return n; });
+    was ? dbUnfollowUser(username).catch(() => {}) : dbFollowUser(username).catch(() => {});
+  };
+
   const vote = (id: number, delta: number) =>
     setVotes(p => ({ ...p, [id]: (p[id] ?? 0) + delta }));
 
   useEffect(() => { setPage(0); setSelectedId(null); }, [section]);
 
   const sectionInfo = SECTIONS.find(s => s.id === section);
-  const title = favTag === "all" ? "All saved" : favTag ?? sectionInfo?.label ?? "Top";
-  const subtitle = favTag ? `${favorites.size} saved stories` : (sectionInfo?.hint ?? "");
+  const title = showFollowing ? "Following"
+    : favTag === "all" ? "All saved"
+    : favTag ? (FAVORITE_TAGS.find(t => t.id === favTag)?.label ?? favTag)
+    : sectionInfo?.label ?? "Top";
+  const subtitle = showFollowing ? `${following.size} user${following.size !== 1 ? "s" : ""}`
+    : favTag ? `${favorites.size} saved stories`
+    : sectionInfo?.hint ?? "";
 
   return (
     <ThemeContext.Provider value={theme}>
+      <ProfileContext.Provider value={setProfileUser}>
       <Desktop>
-        <Sidebar section={section} onSection={setSection}
-          favTag={favTag} onFavTag={setFavTag}
-          favCount={favorites.size} onLoginClick={() => setShowLogin(true)}/>
+        <Sidebar section={section} onSection={s => { setSection(s); setFavTag(null); setShowFollowing(false); }}
+          favTag={favTag} onFavTag={t => { setFavTag(t); setShowFollowing(false); }}
+          favCount={favorites.size} onLoginClick={() => setShowLogin(true)}
+          showFollowing={showFollowing} onShowFollowing={() => { setShowFollowing(true); setFavTag(null); }}
+          followingCount={following.size}/>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, height: "100%" }}>
           <Toolbar title={title} subtitle={subtitle} search={search} onSearch={setSearch}
             right={loggedIn ? (
@@ -155,7 +176,8 @@ export default function App() {
             <FeedView feed={section} selectedId={selectedId} onSelect={setSelectedId}
               favorites={favorites} onToggleFav={toggleFav}
               favoriteMeta={favMeta} page={page} onPageChange={setPage} search={search}
-              favTag={favTag} favItems={favItems}/>
+              favTag={favTag} favItems={favItems}
+              followingMode={showFollowing} following={following}/>
             <ThreadView storyId={selectedId}
               isFav={selectedId ? favorites.has(selectedId) : false}
               favMeta={selectedId ? favMeta[selectedId] : undefined}
@@ -167,6 +189,16 @@ export default function App() {
       </Desktop>
       {showLogin && <LoginModal onClose={() => setShowLogin(false)}/>}
       {showSubmit && <SubmitModal onClose={() => setShowSubmit(false)}/>}
+      {profileUser && (
+        <ProfileModal
+          username={profileUser}
+          onClose={() => setProfileUser(null)}
+          following={following}
+          onToggleFollow={toggleFollow}
+          onSelectStory={id => { setSelectedId(id); setProfileUser(null); }}
+        />
+      )}
+      </ProfileContext.Provider>
     </ThemeContext.Provider>
   );
 }
