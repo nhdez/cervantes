@@ -2,6 +2,8 @@
 
 A native Hacker News client for Linux (and macOS/Windows), built with [Tauri 2](https://tauri.app), React 19, and TypeScript.
 
+<img width="1338" height="858" alt="image" src="https://github.com/user-attachments/assets/fa567791-50e9-4738-aab9-b256786302f6" />
+
 ## Features
 
 - **All six HN feeds** — Top, New, Best, Ask, Show, Jobs with pagination
