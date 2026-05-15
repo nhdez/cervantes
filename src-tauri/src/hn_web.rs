@@ -181,25 +181,45 @@ pub async fn hn_submit(title: String, url: Option<String>, text: Option<String>)
 #[tauri::command]
 pub async fn hn_fetch_favorites(username: String) -> Result<Vec<u64>, String> {
     let session = get_session().ok_or("Not logged in")?;
-    let url = format!("https://news.ycombinator.com/favorites?id={}", username);
-    let html = CLIENT
-        .get(&url)
-        .header(header::COOKIE, cookie_header(&session))
-        .send()
-        .await
-        .map_err(|e| e.to_string())?
-        .text()
-        .await
-        .map_err(|e| e.to_string())?;
+    let mut all_ids: Vec<u64> = Vec::new();
+    let mut page = 1u32;
 
-    let ids = {
-        let doc = Html::parse_document(&html);
-        let sel = Selector::parse("tr.athing[id]").map_err(|e| e.to_string())?;
-        doc.select(&sel)
-            .filter_map(|el| el.value().attr("id"))
-            .filter_map(|id_str| id_str.parse::<u64>().ok())
-            .collect::<Vec<u64>>()
-    };
+    loop {
+        let url = if page == 1 {
+            format!("https://news.ycombinator.com/favorites?id={}", username)
+        } else {
+            format!("https://news.ycombinator.com/favorites?id={}&p={}", username, page)
+        };
 
-    Ok(ids)
+        let html = CLIENT
+            .get(&url)
+            .header(header::COOKIE, cookie_header(&session))
+            .send()
+            .await
+            .map_err(|e| e.to_string())?
+            .text()
+            .await
+            .map_err(|e| e.to_string())?;
+
+        let (ids, has_more) = {
+            let doc = Html::parse_document(&html);
+            let item_sel = Selector::parse("tr.athing[id]").map_err(|e| e.to_string())?;
+            let more_sel = Selector::parse("a.morelink").map_err(|e| e.to_string())?;
+            let ids: Vec<u64> = doc.select(&item_sel)
+                .filter_map(|el| el.value().attr("id"))
+                .filter_map(|s| s.parse::<u64>().ok())
+                .collect();
+            let has_more = doc.select(&more_sel).next().is_some();
+            (ids, has_more)
+        };
+
+        all_ids.extend(ids);
+
+        if !has_more {
+            break;
+        }
+        page += 1;
+    }
+
+    Ok(all_ids)
 }
