@@ -78,6 +78,9 @@ pub async fn hn_get_username() -> Option<String> {
 #[tauri::command]
 pub async fn hn_vote(item_id: u64, direction: String) -> Result<(), String> {
     let session = get_session().ok_or("Not logged in")?;
+    if direction != "up" {
+        return Err(format!("Direction '{}' is not yet supported", direction));
+    }
     let item_url = format!("https://news.ycombinator.com/item?id={}", item_id);
     let html = CLIENT.get(&item_url)
         .header(header::COOKIE, cookie_header(&session))
@@ -93,8 +96,6 @@ pub async fn hn_vote(item_id: u64, direction: String) -> Result<(), String> {
             .ok_or("Vote link not found — item may not be votable")?
             .to_string()
     };
-
-    let _ = direction; // reserved for future downvote support
     CLIENT.get(format!("https://news.ycombinator.com{}", href))
         .header(header::COOKIE, cookie_header(&session))
         .send().await.map_err(|e| e.to_string())?;
