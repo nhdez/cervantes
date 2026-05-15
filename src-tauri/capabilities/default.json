@@ -8,6 +8,10 @@
     "opener:default",
     "http:default",
     "shell:allow-open",
-    "store:default"
+    "store:default",
+    "sql:allow-execute",
+    "sql:allow-select",
+    "sql:allow-load",
+    "sql:allow-close"
   ]
 }

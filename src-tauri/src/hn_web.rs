@@ -177,3 +177,29 @@ pub async fn hn_submit(title: String, url: Option<String>, text: Option<String>)
     }
     Err("Submission may have succeeded but item ID could not be extracted.".to_string())
 }
+
+#[tauri::command]
+pub async fn hn_fetch_favorites(username: String) -> Result<Vec<u64>, String> {
+    let session = get_session().ok_or("Not logged in")?;
+    let url = format!("https://news.ycombinator.com/favorites?id={}", username);
+    let html = CLIENT
+        .get(&url)
+        .header(header::COOKIE, cookie_header(&session))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?
+        .text()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let ids = {
+        let doc = Html::parse_document(&html);
+        let sel = Selector::parse("tr.athing[id]").map_err(|e| e.to_string())?;
+        doc.select(&sel)
+            .filter_map(|el| el.value().attr("id"))
+            .filter_map(|id_str| id_str.parse::<u64>().ok())
+            .collect::<Vec<u64>>()
+    };
+
+    Ok(ids)
+}
