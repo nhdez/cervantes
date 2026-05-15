@@ -25,14 +25,14 @@ export const FAVORITE_TAGS: FavTag[] = [
 interface SidebarProps {
   section: FeedType; onSection: (s: FeedType) => void;
   favTag: string | null; onFavTag: (t: string | null) => void;
-  favCount: number; onLoginClick: () => void;
+  favCount: number; tagCounts: Record<string, number>; onLoginClick: () => void;
   showFollowing: boolean; onShowFollowing: () => void;
   followingCount: number;
   showNotes: boolean; onShowNotes: () => void;
   notesCount: number;
 }
 
-export function Sidebar({ section, onSection, favTag, onFavTag, favCount, onLoginClick, showFollowing, onShowFollowing, followingCount, showNotes, onShowNotes, notesCount }: SidebarProps) {
+export function Sidebar({ section, onSection, favTag, onFavTag, favCount, tagCounts, onLoginClick, showFollowing, onShowFollowing, followingCount, showNotes, onShowNotes, notesCount }: SidebarProps) {
   const t = useTheme();
   const { loggedIn, username, karma } = useAuthStore();
 
@@ -65,7 +65,8 @@ export function Sidebar({ section, onSection, favTag, onFavTag, favCount, onLogi
           {FAVORITE_TAGS.map(tg => (
             <SidebarItem key={tg.id} label={tg.label} iconName="tag"
               iconColor={(t as unknown as Record<string, string>)[tg.color] || t.muted}
-              selected={favTag === tg.id && !showFollowing} onClick={() => onFavTag(tg.id)}/>
+              selected={favTag === tg.id && !showFollowing} onClick={() => onFavTag(tg.id)}
+              count={tagCounts[tg.id] || undefined}/>
           ))}
         </div>
       </div>

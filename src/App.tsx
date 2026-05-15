@@ -166,6 +166,15 @@ export default function App() {
 
   const sectionInfo = SECTIONS.find(s => s.id === section);
   const noteCount = Object.keys(notes).length;
+  const tagCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const meta of Object.values(favMeta)) {
+      for (const tag of meta.tags) {
+        counts[tag] = (counts[tag] ?? 0) + 1;
+      }
+    }
+    return counts;
+  }, [favMeta]);
   const title = showNotes ? "Notes"
     : showFollowing ? "Following"
     : favTag === "all" ? "All saved"
@@ -183,7 +192,7 @@ export default function App() {
       <Desktop>
         <Sidebar section={section} onSection={s => { setSection(s); setFavTag(null); setShowFollowing(false); setShowNotes(false); }}
           favTag={favTag} onFavTag={t => { setFavTag(t); setShowFollowing(false); setShowNotes(false); }}
-          favCount={favorites.size} onLoginClick={() => setShowLogin(true)}
+          favCount={favorites.size} tagCounts={tagCounts} onLoginClick={() => setShowLogin(true)}
           showFollowing={showFollowing} onShowFollowing={() => { setShowFollowing(true); setFavTag(null); setShowNotes(false); }}
           followingCount={following.size}
           showNotes={showNotes} onShowNotes={() => { setShowNotes(true); setFavTag(null); setShowFollowing(false); }}
