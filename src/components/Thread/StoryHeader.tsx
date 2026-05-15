@@ -8,6 +8,7 @@ import { FAVORITE_TAGS } from "../Layout/Sidebar";
 import type { HNItem, FavMeta } from "../../types/hn";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useOpenProfile } from "../../contexts/ProfileContext";
+import { useNotes } from "../../contexts/NoteContext";
 
 function btnGhost(t: Theme) { return { display: "inline-flex" as const, alignItems: "center" as const, gap: 6, padding: "6px 12px", borderRadius: 6, border: `1px solid ${t.rule}`, background: "transparent", color: t.ink, fontFamily: SERIF, fontSize: 13, fontWeight: 500, cursor: "pointer" }; }
 function btnPrimary(t: Theme) { return { display: "inline-flex" as const, alignItems: "center" as const, gap: 6, padding: "6px 14px", borderRadius: 6, border: `1px solid ${t.accent}`, background: t.accent, color: "#FBF6E9", fontFamily: SERIF, fontSize: 13, fontWeight: 600, cursor: "pointer" }; }
@@ -25,6 +26,10 @@ export function StoryHeader({ story, isFav, favMeta, onToggleFav, onUpdateFavNot
   const [editingNote, setEditingNote] = useState(false);
   const [draftNote, setDraftNote] = useState(favMeta?.note ?? "");
   const openProfile = useOpenProfile();
+  const { notes, saveNote, deleteNote } = useNotes();
+  const [showNoteComposer, setShowNoteComposer] = useState(false);
+  const existingNote = notes[story.id];
+  const [noteText, setNoteText] = useState(existingNote?.body ?? "");
   const domain = domainFromUrl(story.url);
   const v = votes[story.id] ?? 0;
   const voted = v > 0;
@@ -65,8 +70,38 @@ export function StoryHeader({ story, isFav, favMeta, onToggleFav, onUpdateFavNot
           <Icon name={isFav ? "star-fill" : "star"} size={13} color={isFav ? t.accent : t.ink}/>{isFav ? "Favorited" : "Favorite"}
         </button>
         {story.url && <button style={btnGhost(t)} onClick={openSource}><Icon name="link" size={13} color={t.ink}/> Open source</button>}
+        <button onClick={() => { setNoteText(existingNote?.body ?? ""); setShowNoteComposer(!showNoteComposer); }}
+          style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 6, border: `1px solid ${existingNote ? t.accent : t.rule}`, background: existingNote ? t.accentSoft : "transparent", color: existingNote ? t.accent : t.ink, fontFamily: SERIF, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+          <Icon name="pencil" size={13} color={existingNote ? t.accent : t.ink}/>{existingNote ? "Note ✎" : "Note"}
+        </button>
         <div style={{ flex: 1 }}/>
       </div>
+      {/* Note composer */}
+      {showNoteComposer && (
+        <div style={{ marginTop: 14, padding: "14px 16px", background: t.surface, border: `1px solid ${t.rule}`, borderRadius: 8 }}>
+          <div style={{ fontFamily: MONO, fontSize: 10, color: t.muted, letterSpacing: 0.5, textTransform: "uppercase" as const, marginBottom: 8 }}>Your note</div>
+          <textarea autoFocus value={noteText} onChange={e => setNoteText(e.target.value)}
+            placeholder="What do you want to remember about this?"
+            style={{ width: "100%", border: `1px solid ${t.rule}`, outline: "none", background: t.bg, color: t.ink, borderRadius: 6, padding: 10, fontFamily: SERIF, fontSize: 14, lineHeight: 1.5, resize: "vertical", minHeight: 72, boxSizing: "border-box" }}/>
+          <div style={{ marginTop: 8, display: "flex", justifyContent: "space-between", gap: 8 }}>
+            <div>
+              {existingNote && (
+                <button style={btnGhost(t)} onClick={() => { deleteNote(story.id); setShowNoteComposer(false); }}>
+                  <Icon name="trash" size={13} color={t.ink}/> Delete
+                </button>
+              )}
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button style={btnGhost(t)} onClick={() => setShowNoteComposer(false)}>Cancel</button>
+              <button style={btnPrimary(t)} onClick={() => {
+                if (!noteText.trim()) return;
+                saveNote({ itemId: story.id, itemType: "story", itemTitle: story.title ?? "", storyId: story.id, storyTitle: story.title ?? "", body: noteText.trim() });
+                setShowNoteComposer(false);
+              }}>Save note</button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Favorite drawer */}
       {isFav && (
         <div style={{ marginTop: 16, padding: "14px 16px", background: t.surface, border: `1px solid ${t.rule}`, borderRadius: 8 }}>

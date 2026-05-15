@@ -28,9 +28,11 @@ interface SidebarProps {
   favCount: number; onLoginClick: () => void;
   showFollowing: boolean; onShowFollowing: () => void;
   followingCount: number;
+  showNotes: boolean; onShowNotes: () => void;
+  notesCount: number;
 }
 
-export function Sidebar({ section, onSection, favTag, onFavTag, favCount, onLoginClick, showFollowing, onShowFollowing, followingCount }: SidebarProps) {
+export function Sidebar({ section, onSection, favTag, onFavTag, favCount, onLoginClick, showFollowing, onShowFollowing, followingCount, showNotes, onShowNotes, notesCount }: SidebarProps) {
   const t = useTheme();
   const { loggedIn, username, karma } = useAuthStore();
 
@@ -67,12 +69,14 @@ export function Sidebar({ section, onSection, favTag, onFavTag, favCount, onLogi
           ))}
         </div>
       </div>
-      {/* Following */}
+      {/* Social + Notes */}
       <div style={{ marginTop: 18 }}>
         <SidebarSectionHeader label="Social"/>
         <div style={{ padding: "0 8px" }}>
           <SidebarItem label="Following" iconName="users" iconColor={t.accent}
-            selected={showFollowing} onClick={onShowFollowing} count={followingCount}/>
+            selected={showFollowing && !showNotes} onClick={onShowFollowing} count={followingCount}/>
+          <SidebarItem label="Notes" iconName="pencil" iconColor={t.accent}
+            selected={showNotes} onClick={onShowNotes} count={notesCount}/>
         </div>
       </div>
       <div style={{ flex: 1 }}/>

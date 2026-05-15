@@ -12,8 +12,11 @@ import { LoginModal } from "./components/Auth/LoginModal";
 import { SubmitModal } from "./components/Auth/SubmitModal";
 import { ProfileModal } from "./components/Profile/ProfileModal";
 import { ProfileContext } from "./contexts/ProfileContext";
-import type { FeedType, HNItem, FavMeta } from "./types/hn";
+import { NoteContext } from "./contexts/NoteContext";
+import { NotesView } from "./components/Notes/NotesView";
+import type { FeedType, HNItem, FavMeta, NoteRecord } from "./types/hn";
 import { dbLoadFollowing, dbFollowUser, dbUnfollowUser } from "./lib/db";
+import { dbLoadNotes, dbSaveNote, dbDeleteNote } from "./lib/db";
 import { Icon } from "./components/Shared/Icon";
 import { invoke } from "@tauri-apps/api/core";
 import { fetchUser, fetchItem } from "./lib/hnApi";
@@ -35,6 +38,8 @@ export default function App() {
   const [profileUser, setProfileUser] = useState<string | null>(null);
   const [following, setFollowing] = useState<Set<string>>(new Set());
   const [showFollowing, setShowFollowing] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
+  const [notes, setNotes] = useState<Record<number, NoteRecord>>({});
 
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
   const [favMeta, setFavMeta] = useState<Record<number, FavMeta>>({});
@@ -51,6 +56,7 @@ export default function App() {
       setFavItems(items);
     }).catch(() => {});
     dbLoadFollowing().then(f => setFollowing(f)).catch(() => {});
+    dbLoadNotes().then(n => setNotes(n)).catch(() => {});
   }, []);
 
   // Restore auth state from keychain on startup
@@ -136,6 +142,17 @@ export default function App() {
     });
   };
 
+  const saveNote = (n: Omit<NoteRecord, "updatedAt">) => {
+    const full: NoteRecord = { ...n, updatedAt: new Date().toISOString() };
+    setNotes(prev => ({ ...prev, [n.itemId]: full }));
+    dbSaveNote(full).catch(() => {});
+  };
+
+  const deleteNote = (itemId: number) => {
+    setNotes(prev => { const c = { ...prev }; delete c[itemId]; return c; });
+    dbDeleteNote(itemId).catch(() => {});
+  };
+
   const toggleFollow = (username: string) => {
     const was = following.has(username);
     setFollowing(prev => { const n = new Set(prev); was ? n.delete(username) : n.add(username); return n; });
@@ -148,23 +165,29 @@ export default function App() {
   useEffect(() => { setPage(0); setSelectedId(null); }, [section]);
 
   const sectionInfo = SECTIONS.find(s => s.id === section);
-  const title = showFollowing ? "Following"
+  const noteCount = Object.keys(notes).length;
+  const title = showNotes ? "Notes"
+    : showFollowing ? "Following"
     : favTag === "all" ? "All saved"
     : favTag ? (FAVORITE_TAGS.find(t => t.id === favTag)?.label ?? favTag)
     : sectionInfo?.label ?? "Top";
-  const subtitle = showFollowing ? `${following.size} user${following.size !== 1 ? "s" : ""}`
+  const subtitle = showNotes ? `${noteCount} note${noteCount !== 1 ? "s" : ""}`
+    : showFollowing ? `${following.size} user${following.size !== 1 ? "s" : ""}`
     : favTag ? `${favorites.size} saved stories`
     : sectionInfo?.hint ?? "";
 
   return (
     <ThemeContext.Provider value={theme}>
+      <NoteContext.Provider value={{ notes, saveNote, deleteNote }}>
       <ProfileContext.Provider value={setProfileUser}>
       <Desktop>
-        <Sidebar section={section} onSection={s => { setSection(s); setFavTag(null); setShowFollowing(false); }}
-          favTag={favTag} onFavTag={t => { setFavTag(t); setShowFollowing(false); }}
+        <Sidebar section={section} onSection={s => { setSection(s); setFavTag(null); setShowFollowing(false); setShowNotes(false); }}
+          favTag={favTag} onFavTag={t => { setFavTag(t); setShowFollowing(false); setShowNotes(false); }}
           favCount={favorites.size} onLoginClick={() => setShowLogin(true)}
-          showFollowing={showFollowing} onShowFollowing={() => { setShowFollowing(true); setFavTag(null); }}
-          followingCount={following.size}/>
+          showFollowing={showFollowing} onShowFollowing={() => { setShowFollowing(true); setFavTag(null); setShowNotes(false); }}
+          followingCount={following.size}
+          showNotes={showNotes} onShowNotes={() => { setShowNotes(true); setFavTag(null); setShowFollowing(false); }}
+          notesCount={noteCount}/>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, height: "100%" }}>
           <Toolbar title={title} subtitle={subtitle} search={search} onSearch={setSearch}
             right={loggedIn ? (
@@ -173,11 +196,14 @@ export default function App() {
               </button>
             ) : undefined}/>
           <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
-            <FeedView feed={section} selectedId={selectedId} onSelect={setSelectedId}
-              favorites={favorites} onToggleFav={toggleFav}
-              favoriteMeta={favMeta} page={page} onPageChange={setPage} search={search}
-              favTag={favTag} favItems={favItems}
-              followingMode={showFollowing} following={following}/>
+            {showNotes
+              ? <NotesView selectedId={selectedId} onSelect={id => { setSelectedId(id); }} search={search}/>
+              : <FeedView feed={section} selectedId={selectedId} onSelect={setSelectedId}
+                  favorites={favorites} onToggleFav={toggleFav}
+                  favoriteMeta={favMeta} page={page} onPageChange={setPage} search={search}
+                  favTag={favTag} favItems={favItems}
+                  followingMode={showFollowing} following={following}/>
+            }
             <ThreadView storyId={selectedId}
               isFav={selectedId ? favorites.has(selectedId) : false}
               favMeta={selectedId ? favMeta[selectedId] : undefined}
@@ -199,6 +225,7 @@ export default function App() {
         />
       )}
       </ProfileContext.Provider>
+      </NoteContext.Provider>
     </ThemeContext.Provider>
   );
 }

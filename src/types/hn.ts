@@ -20,6 +20,16 @@ export interface HNItem {
 
 export interface FavMeta { note: string; tags: string[]; savedAt: string; }
 
+export interface NoteRecord {
+  itemId: number;
+  itemType: "story" | "comment";
+  itemTitle: string;   // story title, or stripped comment excerpt
+  storyId: number;     // for stories: same as itemId; for comments: parent story id
+  storyTitle: string;  // for stories: same as itemTitle; for comments: story title
+  body: string;
+  updatedAt: string;
+}
+
 export interface HNUser {
   id: string;
   created: number;

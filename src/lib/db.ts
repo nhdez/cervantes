@@ -1,5 +1,5 @@
 import Database from "@tauri-apps/plugin-sql";
-import type { FavMeta, HNItem } from "../types/hn";
+import type { FavMeta, HNItem, NoteRecord } from "../types/hn";
 
 interface FavoriteRow {
   id: number;
@@ -75,4 +75,37 @@ export async function dbFollowUser(username: string): Promise<void> {
 export async function dbUnfollowUser(username: string): Promise<void> {
   const d = await db();
   await d.execute("DELETE FROM following WHERE username = ?", [username]);
+}
+
+interface NoteRow {
+  item_id: number; item_type: string; item_title: string;
+  story_id: number; story_title: string; body: string; updated_at: string;
+}
+
+export async function dbLoadNotes(): Promise<Record<number, NoteRecord>> {
+  const d = await db();
+  const rows = await d.select<NoteRow[]>("SELECT * FROM notes ORDER BY updated_at DESC");
+  const out: Record<number, NoteRecord> = {};
+  for (const r of rows) {
+    out[r.item_id] = {
+      itemId: r.item_id, itemType: r.item_type as "story" | "comment",
+      itemTitle: r.item_title, storyId: r.story_id, storyTitle: r.story_title,
+      body: r.body, updatedAt: r.updated_at,
+    };
+  }
+  return out;
+}
+
+export async function dbSaveNote(n: NoteRecord): Promise<void> {
+  const d = await db();
+  await d.execute(
+    `INSERT OR REPLACE INTO notes (item_id, item_type, item_title, story_id, story_title, body, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
+    [n.itemId, n.itemType, n.itemTitle, n.storyId, n.storyTitle, n.body],
+  );
+}
+
+export async function dbDeleteNote(itemId: number): Promise<void> {
+  const d = await db();
+  await d.execute("DELETE FROM notes WHERE item_id = ?", [itemId]);
 }

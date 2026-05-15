@@ -7,6 +7,8 @@ import type { HNItem } from "../../types/hn";
 import { useKids } from "../../hooks/useItem";
 import { useAuthStore } from "../../stores/authStore";
 import { useOpenProfile } from "../../contexts/ProfileContext";
+import { useNotes } from "../../contexts/NoteContext";
+import { useCurrentThread } from "../../contexts/ThreadContext";
 
 function btnGhost(t: Theme) { return { display: "inline-flex" as const, alignItems: "center" as const, gap: 6, padding: "6px 12px", borderRadius: 6, border: `1px solid ${t.rule}`, background: "transparent", color: t.ink, fontFamily: SERIF, fontSize: 13, fontWeight: 500, cursor: "pointer" }; }
 function btnPrimary(t: Theme) { return { display: "inline-flex" as const, alignItems: "center" as const, gap: 6, padding: "6px 14px", borderRadius: 6, border: `1px solid ${t.accent}`, background: t.accent, color: "#FBF6E9", fontFamily: SERIF, fontSize: 13, fontWeight: 600, cursor: "pointer" }; }
@@ -23,6 +25,11 @@ export function CommentNode({ comment, depth, votes, onVote }: CommentNodeProps)
   const [replyText, setReplyText] = useState("");
   const { loggedIn } = useAuthStore();
   const openProfile = useOpenProfile();
+  const { notes, saveNote, deleteNote } = useNotes();
+  const thread = useCurrentThread();
+  const [noting, setNoting] = useState(false);
+  const existingNote = notes[comment.id];
+  const [noteText, setNoteText] = useState(existingNote?.body ?? "");
   const v = votes[comment.id] ?? 0;
   const voted = v > 0;
   const score = (comment.score ?? 0) + v;
@@ -66,7 +73,36 @@ export function CommentNode({ comment, depth, votes, onVote }: CommentNodeProps)
                     reply
                   </button>
                 )}
+                <button onClick={() => { setNoteText(existingNote?.body ?? ""); setNoting(!noting); }}
+                  style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, fontFamily: MONO, fontSize: 10.5, textDecoration: "underline", textUnderlineOffset: 2, color: existingNote ? t.accent : t.muted }}>
+                  {existingNote ? "note ✎" : "note"}
+                </button>
               </div>
+              {noting && (
+                <div style={{ marginTop: 10, border: `1px solid ${t.rule}`, borderRadius: 6, background: t.surface, padding: 10 }}>
+                  <textarea autoFocus value={noteText} onChange={e => setNoteText(e.target.value)}
+                    placeholder="Add a note…"
+                    style={{ width: "100%", border: "none", outline: "none", background: "transparent", color: t.ink, fontFamily: SERIF, fontSize: 13, lineHeight: 1.5, resize: "vertical", minHeight: 56 }}/>
+                  <div style={{ marginTop: 6, display: "flex", justifyContent: "space-between", gap: 8 }}>
+                    <div>
+                      {existingNote && (
+                        <button style={btnGhost(t)} onClick={() => { deleteNote(comment.id); setNoting(false); }}>
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button style={btnGhost(t)} onClick={() => setNoting(false)}>Cancel</button>
+                      <button style={btnPrimary(t)} onClick={() => {
+                        if (!noteText.trim()) return;
+                        const excerpt = (comment.text ?? "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 120);
+                        saveNote({ itemId: comment.id, itemType: "comment", itemTitle: excerpt, storyId: thread?.id ?? 0, storyTitle: thread?.title ?? "" , body: noteText.trim() });
+                        setNoting(false);
+                      }}>Save</button>
+                    </div>
+                  </div>
+                </div>
+              )}
               {replying && (
                 <div style={{ marginTop: 10, border: `1px solid ${t.accent}`, borderRadius: 6, background: t.surface, padding: 10 }}>
                   <textarea autoFocus value={replyText} onChange={e => setReplyText(e.target.value)}

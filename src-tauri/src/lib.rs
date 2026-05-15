@@ -30,6 +30,20 @@ pub fn run() {
             );",
             kind: tauri_plugin_sql::MigrationKind::Up,
         },
+        tauri_plugin_sql::Migration {
+            version: 3,
+            description: "create_notes_table",
+            sql: "CREATE TABLE IF NOT EXISTS notes (
+                item_id INTEGER PRIMARY KEY,
+                item_type TEXT NOT NULL DEFAULT 'story',
+                item_title TEXT NOT NULL DEFAULT '',
+                story_id INTEGER NOT NULL DEFAULT 0,
+                story_title TEXT NOT NULL DEFAULT '',
+                body TEXT NOT NULL DEFAULT '',
+                updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );",
+            kind: tauri_plugin_sql::MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

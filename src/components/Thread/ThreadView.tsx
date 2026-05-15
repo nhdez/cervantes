@@ -4,6 +4,7 @@ import { useItem } from "../../hooks/useItem";
 import { StoryHeader } from "./StoryHeader";
 import { CommentTree } from "./CommentTree";
 import { CommentComposer } from "./CommentComposer";
+import { ThreadContext } from "../../contexts/ThreadContext";
 import type { FavMeta } from "../../types/hn";
 
 interface ThreadViewProps {
@@ -30,6 +31,7 @@ export function ThreadView({ storyId, isFav, favMeta, onToggleFav, onUpdateFavNo
   }
 
   return (
+    <ThreadContext.Provider value={story ? { id: story.id, title: story.title ?? "" } : null}>
     <div style={{ flex: 1, height: "100%", overflowY: "auto", background: t.bg }}>
       <div style={{ maxWidth: 720, margin: "0 auto", padding: "40px 48px 80px" }}>
         <StoryHeader story={story} isFav={isFav} favMeta={favMeta}
@@ -51,5 +53,6 @@ export function ThreadView({ storyId, isFav, favMeta, onToggleFav, onUpdateFavNo
         <CommentTree topLevelIds={story.kids} votes={votes} onVote={onVote}/>
       </div>
     </div>
+    </ThreadContext.Provider>
   );
 }
