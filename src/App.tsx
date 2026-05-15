@@ -10,6 +10,9 @@ import { LoginModal } from "./components/Auth/LoginModal";
 import type { FeedType } from "./types/hn";
 import type { FavMeta } from "./types/hn";
 import { Icon } from "./components/Shared/Icon";
+import { invoke } from "@tauri-apps/api/core";
+import { fetchUser } from "./lib/hnApi";
+import { useAuthStore } from "./stores/authStore";
 
 export default function App() {
   const { dark, accent, defaultFeed } = useSettingsStore();
@@ -26,6 +29,18 @@ export default function App() {
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
   const [favMeta, setFavMeta] = useState<Record<number, FavMeta>>({});
   const [votes, setVotes] = useState<Record<number, number>>({});
+
+  const { setLoggedIn } = useAuthStore();
+
+  useEffect(() => {
+    invoke<boolean>("hn_is_logged_in").then(async (isLoggedIn) => {
+      if (!isLoggedIn) return;
+      const storedUsername = await invoke<string | null>("hn_get_username");
+      if (!storedUsername) return;
+      const user = await fetchUser(storedUsername).catch(() => null);
+      if (user) setLoggedIn(storedUsername, user.karma);
+    }).catch(() => {});
+  }, []);
 
   const toggleFav = (id: number) => {
     const wasFav = favorites.has(id);
