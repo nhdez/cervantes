@@ -1,4 +1,4 @@
-import React from "react";
+import { createContext, useContext } from "react";
 
 export const SERIF = '"Source Serif 4", "Source Serif Pro", Charter, Georgia, serif';
 export const MONO  = '"JetBrains Mono", "IBM Plex Mono", ui-monospace, Menlo, monospace';
@@ -26,5 +26,5 @@ export const THEMES: Record<"light" | "dark", Theme> = {
   },
 };
 
-export const ThemeContext = React.createContext<Theme>(THEMES.light);
-export const useTheme = () => React.useContext(ThemeContext);
+export const ThemeContext = createContext<Theme>(THEMES.light);
+export const useTheme = () => useContext(ThemeContext);
