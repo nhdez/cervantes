@@ -109,3 +109,22 @@ export async function dbDeleteNote(itemId: number): Promise<void> {
   const d = await db();
   await d.execute("DELETE FROM notes WHERE item_id = ?", [itemId]);
 }
+
+export async function dbLoadFeedSnapshot(): Promise<number[]> {
+  const d = await db();
+  const rows = await d.select<{ item_id: number }[]>(
+    "SELECT item_id FROM feed_positions ORDER BY rank ASC"
+  );
+  return rows.map(r => r.item_id);
+}
+
+export async function dbSaveFeedSnapshot(ids: number[]): Promise<void> {
+  const d = await db();
+  await d.execute("DELETE FROM feed_positions", []);
+  for (let i = 0; i < ids.length; i++) {
+    await d.execute(
+      "INSERT INTO feed_positions (rank, item_id) VALUES (?, ?)",
+      [i, ids[i]]
+    );
+  }
+}

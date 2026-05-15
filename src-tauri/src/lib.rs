@@ -44,6 +44,16 @@ pub fn run() {
             );",
             kind: tauri_plugin_sql::MigrationKind::Up,
         },
+        tauri_plugin_sql::Migration {
+            version: 4,
+            description: "create_feed_positions_table",
+            sql: "CREATE TABLE IF NOT EXISTS feed_positions (
+                rank INTEGER PRIMARY KEY,
+                item_id INTEGER NOT NULL,
+                recorded_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );",
+            kind: tauri_plugin_sql::MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

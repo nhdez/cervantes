@@ -14,6 +14,7 @@ import { ProfileModal } from "./components/Profile/ProfileModal";
 import { ProfileContext } from "./contexts/ProfileContext";
 import { NoteContext } from "./contexts/NoteContext";
 import { NotesView } from "./components/Notes/NotesView";
+import { useFeedPoller } from "./hooks/useFeedPoller";
 import type { FeedType, HNItem, FavMeta, NoteRecord } from "./types/hn";
 import { dbLoadFollowing, dbFollowUser, dbUnfollowUser } from "./lib/db";
 import { dbLoadNotes, dbSaveNote, dbDeleteNote } from "./lib/db";
@@ -47,6 +48,7 @@ export default function App() {
   const [votes, setVotes] = useState<Record<number, number>>({});
 
   const { loggedIn, username, setLoggedIn } = useAuthStore();
+  const { hasUpdates, clearUpdates } = useFeedPoller();
 
   // Load persisted favorites and following from SQLite on startup
   useEffect(() => {
@@ -159,6 +161,13 @@ export default function App() {
     was ? dbUnfollowUser(username).catch(() => {}) : dbFollowUser(username).catch(() => {});
   };
 
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ["feed"] });
+    queryClient.invalidateQueries({ queryKey: ["feed-page"] });
+    clearUpdates();
+    setPage(0);
+  };
+
   const vote = (id: number, delta: number) =>
     setVotes(p => ({ ...p, [id]: (p[id] ?? 0) + delta }));
 
@@ -199,6 +208,7 @@ export default function App() {
           notesCount={noteCount}/>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, height: "100%" }}>
           <Toolbar title={title} subtitle={subtitle} search={search} onSearch={setSearch}
+            onRefresh={handleRefresh} hasUpdates={hasUpdates}
             right={loggedIn ? (
               <button onClick={() => setShowSubmit(true)} style={{ height: 30, minWidth: 30, padding: "0 10px", borderRadius: 6, border: `1px solid ${theme.rule}`, background: "transparent", color: theme.ink, cursor: "pointer", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 6, fontFamily: SERIF, fontSize: 13 }}>
                 <Icon name="plus" color={theme.ink} size={13}/>Submit

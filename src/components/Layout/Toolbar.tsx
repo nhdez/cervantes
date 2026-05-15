@@ -8,9 +8,11 @@ interface ToolbarProps {
   title: string; subtitle?: string;
   search: string; onSearch: (v: string) => void;
   right?: React.ReactNode;
+  onRefresh?: () => void;
+  hasUpdates?: boolean;
 }
 
-export function Toolbar({ title, subtitle, search, onSearch, right }: ToolbarProps) {
+export function Toolbar({ title, subtitle, search, onSearch, right, onRefresh, hasUpdates }: ToolbarProps) {
   const t = useTheme();
   const { dark, setDark } = useSettingsStore();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -39,6 +41,22 @@ export function Toolbar({ title, subtitle, search, onSearch, right }: ToolbarPro
           style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontFamily: SERIF, fontSize: 13, color: t.ink }}/>
         <span style={{ fontFamily: MONO, fontSize: 9.5, color: t.mutedSoft, border: `1px solid ${t.rule}`, padding: "1px 4px", borderRadius: 3 }}>⌘K</span>
       </div>
+      {onRefresh && (
+        <div style={{ position: "relative" }}>
+          <IconButton onClick={onRefresh} tip="Refresh feed">
+            <Icon name="refresh" color={hasUpdates ? t.blue : t.ink} size={14}/>
+          </IconButton>
+          {hasUpdates && (
+            <span style={{
+              position: "absolute", top: 2, right: 2,
+              width: 7, height: 7, borderRadius: "50%",
+              background: t.blue,
+              border: `1.5px solid ${t.surface}`,
+              animation: "cervantes-pulse 2s ease-in-out infinite",
+            }}/>
+          )}
+        </div>
+      )}
       {right}
       <IconButton onClick={() => setDark(!dark)} tip={dark ? "Light mode" : "Dark mode"}>
         <Icon name={dark ? "sun" : "moon"} color={t.ink} size={14}/>
