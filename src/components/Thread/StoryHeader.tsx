@@ -69,7 +69,7 @@ export function StoryHeader({ story, isFav, favMeta, onToggleFav, onUpdateFavNot
           style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 6, border: `1px solid ${isFav ? t.accent : t.rule}`, background: isFav ? t.accentSoft : "transparent", color: isFav ? t.accent : t.ink, fontFamily: SERIF, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
           <Icon name={isFav ? "star-fill" : "star"} size={13} color={isFav ? t.accent : t.ink}/>{isFav ? "Favorited" : "Favorite"}
         </button>
-        {story.url && <button style={btnGhost(t)} onClick={openSource}><Icon name="link" size={13} color={t.ink}/> Open source</button>}
+        {story.url && <button style={btnGhost(t)} onClick={openSource}><Icon name="link" size={13} color={t.ink}/> Open link</button>}
         <button onClick={() => { setNoteText(existingNote?.body ?? ""); setShowNoteComposer(!showNoteComposer); }}
           style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", borderRadius: 6, border: `1px solid ${existingNote ? t.accent : t.rule}`, background: existingNote ? t.accentSoft : "transparent", color: existingNote ? t.accent : t.ink, fontFamily: SERIF, fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
           <Icon name="pencil" size={13} color={existingNote ? t.accent : t.ink}/>{existingNote ? "Note ✎" : "Note"}

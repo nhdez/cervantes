@@ -44,13 +44,13 @@ export function Toolbar({ title, subtitle, search, onSearch, right, onRefresh, h
       {onRefresh && (
         <div style={{ position: "relative" }}>
           <IconButton onClick={onRefresh} tip="Refresh feed">
-            <Icon name="refresh" color={hasUpdates ? t.blue : t.ink} size={14}/>
+            <Icon name="refresh" color={hasUpdates ? t.accent : t.ink} size={14}/>
           </IconButton>
           {hasUpdates && (
             <span style={{
               position: "absolute", top: 2, right: 2,
               width: 7, height: 7, borderRadius: "50%",
-              background: t.blue,
+              background: t.accent,
               border: `1.5px solid ${t.surface}`,
               animation: "cervantes-pulse 2s ease-in-out infinite",
             }}/>
