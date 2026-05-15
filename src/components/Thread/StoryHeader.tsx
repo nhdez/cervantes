@@ -9,6 +9,7 @@ import type { HNItem, FavMeta } from "../../types/hn";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useOpenProfile } from "../../contexts/ProfileContext";
 import { useNotes } from "../../contexts/NoteContext";
+import { HighlightText } from "../Shared/HighlightText";
 
 function btnGhost(t: Theme) { return { display: "inline-flex" as const, alignItems: "center" as const, gap: 6, padding: "6px 12px", borderRadius: 6, border: `1px solid ${t.rule}`, background: "transparent", color: t.ink, fontFamily: SERIF, fontSize: 13, fontWeight: 500, cursor: "pointer" }; }
 function btnPrimary(t: Theme) { return { display: "inline-flex" as const, alignItems: "center" as const, gap: 6, padding: "6px 14px", borderRadius: 6, border: `1px solid ${t.accent}`, background: t.accent, color: "#FBF6E9", fontFamily: SERIF, fontSize: 13, fontWeight: 600, cursor: "pointer" }; }
@@ -44,7 +45,7 @@ export function StoryHeader({ story, isFav, favMeta, onToggleFav, onUpdateFavNot
         {story.title?.startsWith("Show HN") && <Tag kind="show">Show HN</Tag>}
       </div>
       <h1 style={{ margin: 0, fontFamily: SERIF, fontSize: 30, lineHeight: 1.2, fontWeight: 600, letterSpacing: -0.5, color: t.ink }}>
-        {story.title}
+        <HighlightText text={story.title}/>
       </h1>
       <div style={{ marginTop: 12, fontFamily: MONO, fontSize: 11, color: t.muted, display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap", letterSpacing: 0.2 }}>
         <button onClick={() => story.by && openProfile(story.by)}

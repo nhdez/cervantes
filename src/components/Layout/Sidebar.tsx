@@ -30,9 +30,11 @@ interface SidebarProps {
   followingCount: number;
   showNotes: boolean; onShowNotes: () => void;
   notesCount: number;
+  showFilters: boolean; onShowFilters: () => void;
+  rulesCount: number;
 }
 
-export function Sidebar({ section, onSection, favTag, onFavTag, favCount, tagCounts, onLoginClick, showFollowing, onShowFollowing, followingCount, showNotes, onShowNotes, notesCount }: SidebarProps) {
+export function Sidebar({ section, onSection, favTag, onFavTag, favCount, tagCounts, onLoginClick, showFollowing, onShowFollowing, followingCount, showNotes, onShowNotes, notesCount, showFilters, onShowFilters, rulesCount }: SidebarProps) {
   const t = useTheme();
   const { loggedIn, username, karma } = useAuthStore();
 
@@ -78,6 +80,8 @@ export function Sidebar({ section, onSection, favTag, onFavTag, favCount, tagCou
             selected={showFollowing && !showNotes} onClick={onShowFollowing} count={followingCount}/>
           <SidebarItem label="Notes" iconName="pencil" iconColor={t.accent}
             selected={showNotes} onClick={onShowNotes} count={notesCount}/>
+          <SidebarItem label="Filters" iconName="filter" iconColor={t.accent}
+            selected={showFilters} onClick={onShowFilters} count={rulesCount || undefined}/>
         </div>
       </div>
       <div style={{ flex: 1 }}/>

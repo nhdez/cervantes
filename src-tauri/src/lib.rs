@@ -54,6 +54,17 @@ pub fn run() {
             );",
             kind: tauri_plugin_sql::MigrationKind::Up,
         },
+        tauri_plugin_sql::Migration {
+            version: 5,
+            description: "create_word_rules_table",
+            sql: "CREATE TABLE IF NOT EXISTS word_rules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                find_text TEXT NOT NULL,
+                replace_text TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );",
+            kind: tauri_plugin_sql::MigrationKind::Up,
+        },
     ];
 
     tauri::Builder::default()

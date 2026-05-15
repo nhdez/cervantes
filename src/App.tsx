@@ -13,12 +13,15 @@ import { SubmitModal } from "./components/Auth/SubmitModal";
 import { ProfileModal } from "./components/Profile/ProfileModal";
 import { ProfileContext } from "./contexts/ProfileContext";
 import { NoteContext } from "./contexts/NoteContext";
+import { WordRulesContext } from "./contexts/WordRulesContext";
 import { NotesView } from "./components/Notes/NotesView";
 import { AlgoliaSearchView } from "./components/Feed/AlgoliaSearchView";
+import { WordRulesView } from "./components/WordRules/WordRulesView";
 import { useFeedPoller } from "./hooks/useFeedPoller";
-import type { FeedType, HNItem, FavMeta, NoteRecord } from "./types/hn";
+import type { FeedType, HNItem, FavMeta, NoteRecord, WordRule } from "./types/hn";
 import { dbLoadFollowing, dbFollowUser, dbUnfollowUser } from "./lib/db";
 import { dbLoadNotes, dbSaveNote, dbDeleteNote } from "./lib/db";
+import { dbLoadWordRules, dbSaveWordRule, dbDeleteWordRule } from "./lib/db";
 import { Icon } from "./components/Shared/Icon";
 import { invoke } from "@tauri-apps/api/core";
 import { fetchUser, fetchItem } from "./lib/hnApi";
@@ -41,7 +44,9 @@ export default function App() {
   const [following, setFollowing] = useState<Set<string>>(new Set());
   const [showFollowing, setShowFollowing] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [notes, setNotes] = useState<Record<number, NoteRecord>>({});
+  const [wordRules, setWordRules] = useState<WordRule[]>([]);
 
   const [favorites, setFavorites] = useState<Set<number>>(new Set());
   const [favMeta, setFavMeta] = useState<Record<number, FavMeta>>({});
@@ -60,6 +65,7 @@ export default function App() {
     }).catch(() => {});
     dbLoadFollowing().then(f => setFollowing(f)).catch(() => {});
     dbLoadNotes().then(n => setNotes(n)).catch(() => {});
+    dbLoadWordRules().then(r => setWordRules(r)).catch(() => {});
   }, []);
 
   // Restore auth state from keychain on startup
@@ -156,6 +162,16 @@ export default function App() {
     dbDeleteNote(itemId).catch(() => {});
   };
 
+  const saveRule = async (find: string, replace: string) => {
+    const id = await dbSaveWordRule(find, replace).catch(() => Date.now());
+    setWordRules(prev => [...prev, { id, find, replace }]);
+  };
+
+  const deleteRule = (id: number) => {
+    setWordRules(prev => prev.filter(r => r.id !== id));
+    dbDeleteWordRule(id).catch(() => {});
+  };
+
   const toggleFollow = (username: string) => {
     const was = following.has(username);
     setFollowing(prev => { const n = new Set(prev); was ? n.delete(username) : n.add(username); return n; });
@@ -185,28 +201,35 @@ export default function App() {
     }
     return counts;
   }, [favMeta]);
-  const title = showNotes ? "Notes"
+  const title = showFilters ? "Word replacements"
+    : showNotes ? "Notes"
     : showFollowing ? "Following"
     : favTag === "all" ? "All saved"
     : favTag ? (FAVORITE_TAGS.find(t => t.id === favTag)?.label ?? favTag)
     : sectionInfo?.label ?? "Top";
-  const subtitle = showNotes ? `${noteCount} note${noteCount !== 1 ? "s" : ""}`
+  const subtitle = showFilters ? `${wordRules.length} rule${wordRules.length !== 1 ? "s" : ""}`
+    : showNotes ? `${noteCount} note${noteCount !== 1 ? "s" : ""}`
     : showFollowing ? `${following.size} user${following.size !== 1 ? "s" : ""}`
     : favTag ? `${favorites.size} saved stories`
     : sectionInfo?.hint ?? "";
 
+  const clearNonFeed = () => { setShowFollowing(false); setShowNotes(false); setShowFilters(false); };
+
   return (
     <ThemeContext.Provider value={theme}>
       <NoteContext.Provider value={{ notes, saveNote, deleteNote }}>
+      <WordRulesContext.Provider value={{ rules: wordRules, saveRule, deleteRule }}>
       <ProfileContext.Provider value={setProfileUser}>
       <Desktop>
-        <Sidebar section={section} onSection={s => { setSection(s); setFavTag(null); setShowFollowing(false); setShowNotes(false); }}
-          favTag={favTag} onFavTag={t => { setFavTag(t); setShowFollowing(false); setShowNotes(false); }}
+        <Sidebar section={section} onSection={s => { setSection(s); setFavTag(null); clearNonFeed(); }}
+          favTag={favTag} onFavTag={t => { setFavTag(t); clearNonFeed(); }}
           favCount={favorites.size} tagCounts={tagCounts} onLoginClick={() => setShowLogin(true)}
-          showFollowing={showFollowing} onShowFollowing={() => { setShowFollowing(true); setFavTag(null); setShowNotes(false); }}
+          showFollowing={showFollowing} onShowFollowing={() => { setShowFollowing(true); setFavTag(null); setShowNotes(false); setShowFilters(false); }}
           followingCount={following.size}
-          showNotes={showNotes} onShowNotes={() => { setShowNotes(true); setFavTag(null); setShowFollowing(false); }}
-          notesCount={noteCount}/>
+          showNotes={showNotes} onShowNotes={() => { setShowNotes(true); setFavTag(null); setShowFollowing(false); setShowFilters(false); }}
+          notesCount={noteCount}
+          showFilters={showFilters} onShowFilters={() => { setShowFilters(true); setFavTag(null); setShowFollowing(false); setShowNotes(false); }}
+          rulesCount={wordRules.length}/>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0, height: "100%" }}>
           <Toolbar title={title} subtitle={subtitle} search={search} onSearch={setSearch}
             onRefresh={handleRefresh} hasUpdates={hasUpdates}
@@ -216,7 +239,9 @@ export default function App() {
               </button>
             ) : undefined}/>
           <div style={{ flex: 1, display: "flex", minHeight: 0 }}>
-            {showNotes
+            {showFilters
+              ? <WordRulesView/>
+              : showNotes
               ? <NotesView selectedId={selectedId} onSelect={id => { setSelectedId(id); }} search={search}/>
               : search.trim().length > 1 && !favTag && !showFollowing
               ? <AlgoliaSearchView query={search} selectedId={selectedId} onSelect={setSelectedId} favorites={favorites} onToggleFav={toggleFav}/>
@@ -248,6 +273,7 @@ export default function App() {
         />
       )}
       </ProfileContext.Provider>
+      </WordRulesContext.Provider>
       </NoteContext.Provider>
     </ThemeContext.Provider>
   );

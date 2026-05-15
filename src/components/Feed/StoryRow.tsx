@@ -6,6 +6,7 @@ import type { HNItem } from "../../types/hn";
 import { domainFromUrl, timeAgo } from "../../lib/time";
 import type { FavMeta } from "../../types/hn";
 import { useOpenProfile } from "../../contexts/ProfileContext";
+import { HighlightText } from "../Shared/HighlightText";
 
 interface StoryRowProps {
   story: HNItem; index: number; selected: boolean;
@@ -39,7 +40,7 @@ export function StoryRow({ story, index, selected, isFav, favMeta, positionDelta
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontFamily: SERIF, fontSize: 15.5, lineHeight: 1.35, color: t.ink, fontWeight: selected ? 600 : 500 }}>
-            {story.title}
+            <HighlightText text={story.title}/>
           </div>
           <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", fontFamily: MONO, fontSize: 10.5, color: t.muted, letterSpacing: 0.2 }}>
             {domain && <span style={{ color: t.inkSoft, display: "inline-flex", alignItems: "center", gap: 4 }}><Icon name="link" color={t.muted} size={11}/>{domain}</span>}

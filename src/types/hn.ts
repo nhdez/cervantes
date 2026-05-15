@@ -38,6 +38,12 @@ export interface HNUser {
   submitted?: number[];
 }
 
+export interface WordRule {
+  id: number;
+  find: string;
+  replace: string;
+}
+
 export const FEED_ENDPOINTS: Record<FeedType, string> = {
   top: "topstories",
   new: "newstories",

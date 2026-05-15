@@ -1,5 +1,5 @@
 import Database from "@tauri-apps/plugin-sql";
-import type { FavMeta, HNItem, NoteRecord } from "../types/hn";
+import type { FavMeta, HNItem, NoteRecord, WordRule } from "../types/hn";
 
 interface FavoriteRow {
   id: number;
@@ -127,4 +127,26 @@ export async function dbSaveFeedSnapshot(ids: number[]): Promise<void> {
       [i, ids[i]]
     );
   }
+}
+
+export async function dbLoadWordRules(): Promise<WordRule[]> {
+  const d = await db();
+  const rows = await d.select<{ id: number; find_text: string; replace_text: string }[]>(
+    "SELECT id, find_text, replace_text FROM word_rules ORDER BY created_at ASC"
+  );
+  return rows.map(r => ({ id: r.id, find: r.find_text, replace: r.replace_text }));
+}
+
+export async function dbSaveWordRule(find: string, replace: string): Promise<number> {
+  const d = await db();
+  const result = await d.execute(
+    "INSERT INTO word_rules (find_text, replace_text) VALUES (?, ?)",
+    [find, replace]
+  );
+  return result.lastInsertId as number;
+}
+
+export async function dbDeleteWordRule(id: number): Promise<void> {
+  const d = await db();
+  await d.execute("DELETE FROM word_rules WHERE id = ?", [id]);
 }
