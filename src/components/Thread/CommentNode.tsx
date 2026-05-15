@@ -74,7 +74,7 @@ export function CommentNode({ comment, depth, votes, onVote }: CommentNodeProps)
                   </button>
                 )}
                 <button onClick={() => { setNoteText(existingNote?.body ?? ""); setNoting(!noting); }}
-                  style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, fontFamily: MONO, fontSize: 10.5, textDecoration: "underline", textUnderlineOffset: 2, color: existingNote ? t.accent : t.muted }}>
+                  style={{ border: "none", background: "transparent", cursor: "pointer", padding: 0, fontFamily: MONO, fontSize: 10.5, textDecoration: "underline", textUnderlineOffset: 2, color: t.blue }}>
                   {existingNote ? "note ✎" : "note"}
                 </button>
               </div>
