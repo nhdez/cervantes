@@ -18,7 +18,7 @@ interface ThreadViewProps {
 export function ThreadView({ storyId, isFav, favMeta, onToggleFav, onUpdateFavNote, onUpdateFavTag, votes, onVote, onLoginRequired }: ThreadViewProps) {
   const t = useTheme();
   const { data: story } = useItem(storyId);
-  const [sort, setSort] = useState<"best" | "new" | "old">("best");
+  const [sort, setSort] = useState<"best" | "new" | "old">("best"); // TODO: wire to CommentTree once sort is implemented
 
   if (!storyId || !story) {
     return (
@@ -35,7 +35,7 @@ export function ThreadView({ storyId, isFav, favMeta, onToggleFav, onUpdateFavNo
         <StoryHeader story={story} isFav={isFav} favMeta={favMeta}
           onToggleFav={onToggleFav} onUpdateFavNote={onUpdateFavNote}
           onUpdateFavTag={onUpdateFavTag} votes={votes} onVote={onVote}/>
-        <CommentComposer onPost={() => {}} onLoginRequired={onLoginRequired}/>
+        <CommentComposer onPost={() => {}} onLoginRequired={onLoginRequired}/>{ /* TODO: wire hn_comment Tauri command */}
         <div style={{ margin: "32px 0 16px", display: "flex", alignItems: "baseline", gap: 10, borderBottom: `1px solid ${t.rule}`, paddingBottom: 10 }}>
           <h3 style={{ margin: 0, fontFamily: SERIF, fontSize: 15, fontWeight: 600, color: t.ink, letterSpacing: -0.1 }}>{story.descendants ?? 0} comments</h3>
           <span style={{ flex: 1 }}/>
