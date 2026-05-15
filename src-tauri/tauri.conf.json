@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tauri-app",
+  "productName": "Cervantes",
   "version": "0.1.0",
   "identifier": "com.mecomic.dev",
   "build": {
@@ -12,13 +12,16 @@
   "app": {
     "windows": [
       {
-        "title": "tauri-app",
-        "width": 800,
-        "height": 600
+        "title": "Cervantes",
+        "width": 1320,
+        "height": 840,
+        "minWidth": 900,
+        "minHeight": 600,
+        "decorations": true
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; connect-src https://hacker-news.firebaseio.com https://news.ycombinator.com https://hn.algolia.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:"
     }
   },
   "bundle": {
