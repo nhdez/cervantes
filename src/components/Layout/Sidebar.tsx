@@ -34,14 +34,8 @@ export function Sidebar({ section, onSection, favTag, onFavTag, favCount, onLogi
 
   return (
     <div style={{ width: 232, flexShrink: 0, height: "100%", background: t.surface, borderRight: `1px solid ${t.rule}`, display: "flex", flexDirection: "column", fontFamily: SERIF }}>
-      {/* Traffic lights */}
-      <div style={{ height: 44, padding: "0 16px", display: "flex", alignItems: "center", gap: 8 }}>
-        {["#ff5f57", "#febc2e", "#28c840"].map((bg, i) => (
-          <div key={i} style={{ width: 12, height: 12, borderRadius: "50%", background: bg, border: "0.5px solid rgba(0,0,0,0.15)" }}/>
-        ))}
-      </div>
       {/* Brand */}
-      <div style={{ padding: "6px 18px 14px" }}>
+      <div style={{ padding: "18px 18px 14px" }}>
         <div style={{ fontFamily: SERIF, fontSize: 22, fontWeight: 600, letterSpacing: -0.3, color: t.ink, lineHeight: 1 }}>
           Cervantes<span style={{ color: t.accent }}>.</span>
         </div>
