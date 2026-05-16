@@ -15,6 +15,7 @@ A native Hacker News client for Linux (and macOS/Windows), built with [Tauri 2](
 - **Feed freshness** — background poller tracks position changes every 5 minutes; trending ▲/▼ indicators on every row
 - **Keyboard shortcut** — `Ctrl/Cmd+K` to focus search from anywhere
 - **Dark and light themes** — toggle in one click
+- **Word replacements** — define find → replace rules in the Filters panel; matched words are substituted and highlighted in the theme accent colour across story titles and comments
 - **Links open in your system browser**
 
 ## Requirements
